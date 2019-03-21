@@ -1,3 +1,5 @@
+//BoundScript1.cs
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,3 +25,213 @@ public class BoundScript1 : MonoBehaviour {
 		
 	}
 }
+
+
+
+
+
+
+//BulletTest.cs
+
+using UnityEngine;
+using System.Collections;
+
+public class BulletTest : MonoBehaviour
+{
+
+    [SerializeField] private float power = 50f;
+    [SerializeField] private float deleteTime = 10f;
+    private Rigidbody rigid;
+    private Ray ray;
+    public AudioClip audioClip;
+    AudioSource audioSource;
+
+    void Awake()
+    {
+
+        audioSource = gameObject.GetComponent<AudioSource>();
+        audioSource.clip = audioClip;
+        //　Rigidbodyを取得し速度を0に初期化
+        rigid = GetComponent<Rigidbody>();
+    }
+
+    //　弾がアクティブになった時
+    void OnEnable()
+    {
+
+        //　カメラからクリックした位置にレイを飛ばす
+        ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+        //球に重力を持たせる
+       // rigid.AddForce(ray.direction * power, ForceMode.Force);
+
+        //　弾を発射してから指定した時間が経過したら自動で削除
+        Destroy(this.gameObject, deleteTime);
+    }
+
+    void OnCollisionEnter(Collision col)
+    {
+        // Enemyタグがついた敵に衝突したら自身と敵を削除
+        if (col.gameObject.CompareTag("Enemy"))
+        {
+            audioSource.Play();
+            Destroy(this.gameObject);
+            Destroy(col.gameObject);
+           
+        } 
+    }
+    void FixedUpdate()
+    {
+        rigid.AddForce(ray.direction * power, ForceMode.Force);
+    }
+}
+
+
+
+
+
+//CameraMover.cs
+
+using UnityEngine;
+
+public class CameraMover : MonoBehaviour
+{
+
+    Rigidbody _rb;
+    public bool isUseCameraDirection;    // カメラの向きに合わせて移動させたい場合はtrue
+    public float moveSpeed;              // 移動速度
+    public float moveForceMultiplier;    // 移動速度の入力に対する追従度
+    public GameObject mainCamera;
+    float _horizontalInput;
+    float _verticalInput;
+   
+    void Start()
+    {
+        _rb = GetComponent<Rigidbody>();
+
+        if (mainCamera == null)
+            mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+    }
+
+    void Update()
+    {
+        //上下左右キーで歩き表現
+        _horizontalInput = Input.GetAxis("Horizontal");
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            transform.position = new Vector3(transform.position.x, Mathf.PingPong(Time.time, (float)0.7), transform.position.z);
+        }
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+            transform.position = new Vector3(transform.position.x, Mathf.PingPong(Time.time, (float)0.7), transform.position.z);
+        }
+
+        _verticalInput = Input.GetAxis("Vertical");
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            transform.position = new Vector3(transform.position.x, Mathf.PingPong(Time.time, (float)0.5), transform.position.z);
+        }
+
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            transform.position = new Vector3(transform.position.x, Mathf.PingPong(Time.time, (float)0.5), transform.position.z);
+        }
+
+
+    }
+
+    void FixedUpdate()
+    {
+        Vector3 moveVector = Vector3.zero;    // 移動速度の入力
+
+        if (isUseCameraDirection)
+        {
+            Vector3 cameraForward = mainCamera.transform.forward;
+            Vector3 cameraRight = mainCamera.transform.right;
+            cameraForward.y = 0.0f;    // 水平方向に移動させたい場合はy方向成分を0にする
+            cameraRight.y = 0.0f;
+
+            moveVector = moveSpeed * (cameraRight.normalized * _horizontalInput + cameraForward.normalized * _verticalInput);
+        }
+        else
+        {
+            moveVector.x = moveSpeed * _horizontalInput;
+            moveVector.z = moveSpeed * _verticalInput;
+        }
+
+        _rb.AddForce(moveForceMultiplier * (moveVector - _rb.velocity));
+    }
+}
+
+
+
+
+
+
+//CountDownTmer.cs
+
+using UnityEngine;
+using System.Collections;
+using UnityEngine.UI;
+
+public class CountDownTimer : MonoBehaviour
+{
+
+    //　トータル制限時間
+    private float totalTime;
+    //　制限時間（分）
+    [SerializeField]
+    private int minute;
+    //　制限時間（秒）
+    [SerializeField]
+    private float seconds;
+    //　前回Update時の秒数
+    private float oldSeconds;
+    private Text timerText;
+    public GameObject GameOver;
+    private Text text;
+    void Start()
+    {
+        totalTime = minute * 60 + seconds;
+        oldSeconds = 0f;
+        timerText = GetComponentInChildren<Text>();
+    }
+
+    void Update()
+    {
+        //　制限時間が0秒以下なら何もしない
+        if (totalTime <= 0f)
+        {
+            return;
+        }
+        //　一旦トータルの制限時間を計測；
+        totalTime = minute * 60 + seconds;
+        totalTime -= Time.deltaTime;
+
+        //　再設定
+        minute = (int)totalTime / 60;
+        seconds = totalTime - minute * 60;
+
+        //　タイマー表示用UIテキストに時間を表示する
+        if ((int)seconds != (int)oldSeconds)
+        {
+            timerText.text = minute.ToString("00") + ":" + ((int)seconds).ToString("00");
+
+            if (totalTime <= 4f)
+            {
+                timerText.color = Color.red;
+                timerText.fontSize = 50;
+            }
+        }
+        oldSeconds = seconds;
+        //　制限時間以下になったらコンソールに『制限時間終了』という文字列を表示する
+        if (totalTime <= 0f)
+        {
+            
+            GameOver.SendMessage("Lose");
+        }
+    }
+}
+
+
+
