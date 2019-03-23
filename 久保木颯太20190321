@@ -31,6 +31,11 @@ public class BoundScript1 : MonoBehaviour {
 
 
 
+
+
+
+
+
 //BulletTest.cs
 
 using UnityEngine;
@@ -248,6 +253,286 @@ public class CountDownTimer : MonoBehaviour
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+//GameClearController.cs
+
+
+//敵を全滅したらクリア画面に遷移
+
+using UnityEngine;
+using System.Collections;
+using UnityEngine.SceneManagement;
+
+public class GameClearController : MonoBehaviour
+{
+
+    // 配列（同じ種類の複数のデータを収納するための箱を作る）
+    private GameObject[] enemyObjects;
+
+    void Update()
+    {
+
+        // Enemyというタグが付いているオブジェクトのデータを箱の中に入れる。
+        enemyObjects = GameObject.FindGameObjectsWithTag("Enemy");
+
+        // データの入った箱の数をコンソール画面に表示する。
+        print(enemyObjects.Length);
+
+        // データの入った箱のデータが０に等しくなった時（Enemyというタグが付いているオブジェクトが全滅したとき）
+        if (enemyObjects.Length == 0)
+        {
+
+            // ゲームクリアーシーンに遷移する。
+            SceneManager.LoadScene("clear");
+        }
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+//GameEnd
+
+using UnityEngine;
+using System.Collections;
+using UnityEngine.SceneManagement;
+
+public class GameEnd : MonoBehaviour
+{
+
+    //　スタートボタンを押したら実行する
+    public void End()
+    {
+        SceneManager.LoadScene("Title");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+//GameOverScript
+
+using UnityEngine; 
+ using UnityEngine.UI; 
+ using System.Collections; 
+ 
+ 
+ public class gameOverScript : MonoBehaviour
+{ 
+ 	bool gameOverflg = false; 
+ 	 
+ 	void Start()
+    {
+               this.gameObject.GetComponent<Text>().enabled = false;
+          } 
+ 	 
+ 	void Update()
+    {
+              if (gameOverflg == true)
+        {
+                      if (Input.GetMouseButtonDown(0))
+            {
+                              Application.LoadLevel("Title");
+                          }
+                  }
+          } 
+ 	 
+ 	public void Lose()
+    {
+              this.gameObject.GetComponent<Text>().enabled = true;
+              GameObject[] clones = GameObject.FindGameObjectsWithTag("Finish");
+              foreach (GameObject obj in clones)
+        {
+                      Destroy(obj);
+                  }
+              gameOverflg = true;
+          } 
+ }
+
+
+
+
+
+
+
+
+
+
+
+//GameSystem.cs
+
+using UnityEngine;
+using System.Collections;
+using UnityEngine.SceneManagement;
+
+public class GameSystem : MonoBehaviour
+{
+
+    //　スタートボタンを押したら実行する
+    public void GameStart()
+    {
+        SceneManager.LoadScene("Game");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+//huwahuwa.cs
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class huwahuwa : MonoBehaviour
+{
+    public float amplitude = 0.01f; // 振幅
+    private int frameCnt = 0; // フレームカウント
+
+    void Start()
+    {
+        iTween.MoveTo(gameObject, iTween.Hash("x", 1f, "y", 1f, "z", 1f, "time", 2f));
+    }
+    void FixedUpdate()
+    {
+        frameCnt += 1;
+        if (10000 <= frameCnt)
+        {
+            frameCnt = 0;
+        }
+        if (0 == frameCnt % 2)
+        {
+            // 上下に振動させる（ふわふわを表現）
+            float posYSin = Mathf.Sin(2.0f * Mathf.PI * (float)(frameCnt % 200) / (200.0f - 1.0f));
+            iTween.MoveAdd(gameObject, new Vector3(0, amplitude * posYSin, 0), 0.0f);
+        }
+    }
+
+}
+
+
+
+
+
+
+
+
+
+//MainCtrl.cs
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class MainCtrl : MonoBehaviour
+{
+    // カメラオブジェクトを格納する変数
+    public Camera mainCamera;
+    // カメラの回転速度を格納する変数
+    public Vector2 rotationSpeed;
+    // マウス移動方向とカメラ回転方向を反転する判定フラグ
+    public bool reverse;
+    // マウス座標を格納する変数
+    private Vector2 lastMousePosition;
+    // カメラの角度を格納する変数（初期値に0,0を代入）
+    private Vector2 newAngle = new Vector2(0, 0);
+
+    // ゲーム実行中の繰り返し処理
+    void Update()
+    {
+        // 左クリックした時
+        if (Input.GetMouseButtonDown(1))
+        {
+            // カメラの角度を変数"newAngle"に格納
+            newAngle = mainCamera.transform.localEulerAngles;
+            // マウス座標を変数"lastMousePosition"に格納
+            lastMousePosition = Input.mousePosition;
+        }
+        // 左ドラッグしている間
+        else if (Input.GetMouseButton(1))
+        {
+            //カメラ回転方向の判定フラグが"true"の場合
+            if (!reverse)
+            {
+                // Y軸の回転：マウスドラッグ方向に視点回転
+                // マウスの水平移動値に変数"rotationSpeed"を掛ける
+                //（クリック時の座標とマウス座標の現在値の差分値）
+                newAngle.y -= (lastMousePosition.x - Input.mousePosition.x) * rotationSpeed.y;
+                // X軸の回転：マウスドラッグ方向に視点回転
+                // マウスの垂直移動値に変数"rotationSpeed"を掛ける
+                //（クリック時の座標とマウス座標の現在値の差分値）
+                newAngle.x -= (Input.mousePosition.y - lastMousePosition.y) * rotationSpeed.x;
+                // "newAngle"の角度をカメラ角度に格納
+                mainCamera.transform.localEulerAngles = newAngle;
+                // マウス座標を変数"lastMousePosition"に格納
+                lastMousePosition = Input.mousePosition;
+            }
+            // カメラ回転方向の判定フラグが"reverse"の場合
+            else if (reverse)
+            {
+                // Y軸の回転：マウスドラッグと逆方向に視点回転
+                newAngle.y -= (Input.mousePosition.x - lastMousePosition.x) * rotationSpeed.y;
+                // X軸の回転：マウスドラッグと逆方向に視点回転
+                newAngle.x -= (lastMousePosition.y - Input.mousePosition.y) * rotationSpeed.x;
+                // "newAngle"の角度をカメラ角度に格納
+                mainCamera.transform.localEulerAngles = newAngle;
+                // マウス座標を変数"lastMousePosition"に格納
+                lastMousePosition = Input.mousePosition;
+            }
+        }
+    }
+
+    // マウスドラッグ方向と視点回転方向を反転する処理
+    public void DirectionChange()
+    {
+        // 判定フラグ変数"reverse"が"false"であれば
+        if (!reverse)
+        {
+            // 判定フラグ変数"reverse"に"true"を代入
+            reverse = true;
+        }
+        // でなければ（判定フラグ変数"reverse"が"true"であれば）
+        else
+        {
+            // 判定フラグ変数"reverse"に"false"を代入
+            reverse = false;
+        }
+    }
+    
+    
+}
+
+
 
 
 
