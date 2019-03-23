@@ -90,6 +90,13 @@ public class BulletTest : MonoBehaviour
 
 
 
+
+
+
+
+
+
+
 //CameraMover.cs
 
 using UnityEngine;
@@ -162,6 +169,15 @@ public class CameraMover : MonoBehaviour
         _rb.AddForce(moveForceMultiplier * (moveVector - _rb.velocity));
     }
 }
+
+
+
+
+
+
+
+
+
 
 
 
