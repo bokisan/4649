@@ -211,6 +211,8 @@ public class CountDownTimer : MonoBehaviour
     private Text timerText;
     public GameObject GameOver;
     private Text text;
+    
+    
     void Start()
     {
         totalTime = minute * 60 + seconds;
